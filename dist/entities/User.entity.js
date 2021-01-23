@@ -41,7 +41,7 @@ __decorate([
 ], User.prototype, "image", void 0);
 __decorate([
     typeorm_1.Column({
-        length: 5
+        length: 9
     }),
     __metadata("design:type", String)
 ], User.prototype, "positionImage", void 0);

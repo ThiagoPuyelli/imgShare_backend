@@ -16,24 +16,31 @@ const multer_1 = __importDefault(require("multer"));
 const path_1 = __importDefault(require("path"));
 const uuid_1 = __importDefault(require("uuid"));
 const fs_1 = __importDefault(require("fs"));
-const storage = multer_1.default.diskStorage({
-    destination(req, file, cb) {
-        cb(null, path_1.default.join(__dirname, "../uploads"));
-    },
-    filename(req, file, cb) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { originalname } = file;
-            const originalnameSplit = originalname.split("|");
-            const fileExt = originalnameSplit[originalnameSplit.length - 1];
-            const filename = uuid_1.default.v4() + "." + fileExt;
-            const uploadVerify = yield fs_1.default.stat(path_1.default.join(__dirname, "../uploads/" + filename), (err, image) => {
-                if (image) {
-                }
+const generatedStorage = () => {
+    return multer_1.default.diskStorage({
+        destination(req, file, cb) {
+            cb(null, path_1.default.join(__dirname, "../uploads"));
+        },
+        filename(req, file, cb) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const { originalname } = file;
+                const originalnameSplit = originalname.split("|");
+                const fileExt = originalnameSplit[originalnameSplit.length - 1];
+                const filename = uuid_1.v4() + "." + fileExt;
+                yield fs_1.default.stat(path_1.default.join(__dirname, "../uploads/" + filename), (err, image) => {
+                    if (image) {
+                        generatedStorage();
+                    }
+                    else {
+                        console.log(err);
+                    }
+                });
+                cb(null, filename);
             });
-            cb(null, uuid_1.default.v4() + "." + fileExt);
-        });
-    }
-});
+        }
+    });
+};
+const storage = generatedStorage();
 exports.default = multer_1.default({
     storage,
     fileFilter(req, file, next) {
