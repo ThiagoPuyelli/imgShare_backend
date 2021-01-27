@@ -3,19 +3,31 @@ import { User } from "../entities/User.entity";
 import { Post } from "../entities/Post.entity";
 import fs from "fs";
 import path from "path";
+import {v2} from "cloudinary";
 
 export var savePost = async (req, res) => {
     if(req.file){
         const post: Post = new Post();
 
-        post.image = req.file.filename;
-        if(req.body.description){
-            post.description = req.body.description;
-        }
-        const user: User = await getRepository(User).findOne({id: req.headers["x-access-token"].split("|")[1]});
-        post.user = user;
-        const postSave = await getRepository(Post).save(post);
-        res.json(postSave);
+        v2.uploader.upload(path.join(__dirname, "../uploads/" + req.file.filename), async (err, image) => {
+            if(err) res.json({error: "Error to save image"});
+
+            const { url, public_id } = image;
+            if(url && public_id){
+                post.image = url;
+                post.public_id = public_id;
+
+                fs.unlinkSync(path.join(__dirname, "../uploads/" + req.file.filename));
+                if(req.body.description){
+                    post.description = req.body.description;
+                }
+                const user: User = await getRepository(User).findOne({id: req.headers["x-access-token"].split("|")[1]});
+                post.user = user;
+                const postSave = await getRepository(Post).save(post);
+                res.json(postSave);
+            } 
+                        
+        })
     } else {
         res.json({
             error: "La imagen no es válida"
@@ -30,8 +42,11 @@ export var deletePost = async (req, res) => {
         const postDeleted = await getRepository(Post).delete(post);
 
         if(postDeleted){
-            fs.unlinkSync(path.join(__dirname, "../uploads/" + post.image));
-            res.json(postDeleted);
+            v2.uploader.destroy(post.public_id, (err, deleted) => {
+                if(err) res.json({error: "Error to destroy image"});
+                
+                res.json(postDeleted);
+            })
         }
     } else if(!post){
         res.json({
@@ -48,8 +63,22 @@ export var updatePost = async (req, res) => {
             if(i != "user" && i != "post") post[i] = req.body[i];
         }
         if(req.file){
-            fs.unlinkSync(path.join(__dirname, "../uploads/" + post.image));
-            post.image = req.file.filename;
+            v2.uploader.destroy(post.public_id, (err, imageDeleted) => {
+                if(err) res.json({error: "Error to delete image"});
+
+                v2.uploader.upload(path.join(__dirname, "../uploads/" + req.file.filename), (err, image) => {
+                    if(err) res.json({error: "Error to update image"});
+
+                    const { url, public_id } = image;
+                    if(url && public_id){
+                        post.image = url;
+                        post.public_id = public_id;
+                        
+                        fs.unlinkSync(path.join(__dirname, "../uploads/" + req.file.filename));
+
+                    }
+                })
+            })
         }
         const postUpdate = await getRepository(Post).update({id: post.id}, post);
 
@@ -61,7 +90,12 @@ export var updatePost = async (req, res) => {
     }
 }
 
-export var getPosts = async (req, res) => res.json(await getRepository(Post).find());
+export var getPosts = async (req, res) => {
+
+    var posts: any = await getRepository(Post).find({relations: ["user"]});
+
+    res.json(posts);
+};
 
 export var getPost = async (req, res) => {
     const post: Post = await getRepository(Post).findOne({id: req.params.id});

@@ -35,13 +35,23 @@ __decorate([
 __decorate([
     typeorm_1.Column({
         type: "varchar",
-        nullable: true
+        nullable: true,
+        unique: true
     }),
     __metadata("design:type", String)
 ], User.prototype, "image", void 0);
 __decorate([
     typeorm_1.Column({
-        length: 9
+        type: "varchar",
+        nullable: true,
+        unique: true
+    }),
+    __metadata("design:type", String)
+], User.prototype, "public_id", void 0);
+__decorate([
+    typeorm_1.Column({
+        type: "varchar",
+        nullable: true
     }),
     __metadata("design:type", String)
 ], User.prototype, "positionImage", void 0);

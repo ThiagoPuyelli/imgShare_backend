@@ -18,17 +18,27 @@ const User_entity_1 = require("../entities/User.entity");
 const Post_entity_1 = require("../entities/Post.entity");
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const cloudinary_1 = require("cloudinary");
 var savePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (req.file) {
         const post = new Post_entity_1.Post();
-        post.image = req.file.filename;
-        if (req.body.description) {
-            post.description = req.body.description;
-        }
-        const user = yield typeorm_1.getRepository(User_entity_1.User).findOne({ id: req.headers["x-access-token"].split("|")[1] });
-        post.user = user;
-        const postSave = yield typeorm_1.getRepository(Post_entity_1.Post).save(post);
-        res.json(postSave);
+        cloudinary_1.v2.uploader.upload(path_1.default.join(__dirname, "../uploads/" + req.file.filename), (err, image) => __awaiter(void 0, void 0, void 0, function* () {
+            if (err)
+                res.json({ error: "Error to save image" });
+            const { url, public_id } = image;
+            if (url && public_id) {
+                post.image = url;
+                post.public_id = public_id;
+                fs_1.default.unlinkSync(path_1.default.join(__dirname, "../uploads/" + req.file.filename));
+                if (req.body.description) {
+                    post.description = req.body.description;
+                }
+                const user = yield typeorm_1.getRepository(User_entity_1.User).findOne({ id: req.headers["x-access-token"].split("|")[1] });
+                post.user = user;
+                const postSave = yield typeorm_1.getRepository(Post_entity_1.Post).save(post);
+                res.json(postSave);
+            }
+        }));
     }
     else {
         res.json({
@@ -42,8 +52,11 @@ var deletePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (post) {
         const postDeleted = yield typeorm_1.getRepository(Post_entity_1.Post).delete(post);
         if (postDeleted) {
-            fs_1.default.unlinkSync(path_1.default.join(__dirname, "../uploads/" + post.image));
-            res.json(postDeleted);
+            cloudinary_1.v2.uploader.destroy(post.public_id, (err, deleted) => {
+                if (err)
+                    res.json({ error: "Error to destroy image" });
+                res.json(postDeleted);
+            });
         }
     }
     else if (!post) {
@@ -61,8 +74,20 @@ var updatePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 post[i] = req.body[i];
         }
         if (req.file) {
-            fs_1.default.unlinkSync(path_1.default.join(__dirname, "../uploads/" + post.image));
-            post.image = req.file.filename;
+            cloudinary_1.v2.uploader.destroy(post.public_id, (err, imageDeleted) => {
+                if (err)
+                    res.json({ error: "Error to delete image" });
+                cloudinary_1.v2.uploader.upload(path_1.default.join(__dirname, "../uploads/" + req.file.filename), (err, image) => {
+                    if (err)
+                        res.json({ error: "Error to update image" });
+                    const { url, public_id } = image;
+                    if (url && public_id) {
+                        post.image = url;
+                        post.public_id = public_id;
+                        fs_1.default.unlinkSync(path_1.default.join(__dirname, "../uploads/" + req.file.filename));
+                    }
+                });
+            });
         }
         const postUpdate = yield typeorm_1.getRepository(Post_entity_1.Post).update({ id: post.id }, post);
         res.json(postUpdate);
@@ -74,7 +99,10 @@ var updatePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.updatePost = updatePost;
-var getPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () { return res.json(yield typeorm_1.getRepository(Post_entity_1.Post).find()); });
+var getPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var posts = yield typeorm_1.getRepository(Post_entity_1.Post).find({ relations: ["user"] });
+    res.json(posts);
+});
 exports.getPosts = getPosts;
 var getPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const post = yield typeorm_1.getRepository(Post_entity_1.Post).findOne({ id: req.params.id });

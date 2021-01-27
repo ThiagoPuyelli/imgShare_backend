@@ -7,6 +7,7 @@ const express_1 = require("express");
 const router = express_1.Router();
 const verifyToken_1 = __importDefault(require("../middlewares/verifyToken"));
 const lik_controllers_1 = require("../controllers/lik.controllers");
-router.post("/lik/:id", verifyToken_1.default, lik_controllers_1.setLik);
+router.get("/lik/:id", verifyToken_1.default, lik_controllers_1.setLik);
 router.get("/lik/:id", verifyToken_1.default, lik_controllers_1.getLikesToPost);
+router.get("/lik-verify/:id", verifyToken_1.default, lik_controllers_1.verifyLik);
 exports.default = router;

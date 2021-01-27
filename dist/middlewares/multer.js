@@ -24,7 +24,7 @@ const generatedStorage = () => {
         filename(req, file, cb) {
             return __awaiter(this, void 0, void 0, function* () {
                 const { originalname } = file;
-                const originalnameSplit = originalname.split("|");
+                const originalnameSplit = originalname.split(".");
                 const fileExt = originalnameSplit[originalnameSplit.length - 1];
                 const filename = uuid_1.v4() + "." + fileExt;
                 yield fs_1.default.stat(path_1.default.join(__dirname, "../uploads/" + filename), (err, image) => {

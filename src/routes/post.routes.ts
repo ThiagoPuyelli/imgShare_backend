@@ -9,7 +9,7 @@ router.post("/posts", verifyToken, multer.single("image"), savePost);
 router.delete("/posts/:id", verifyToken, findPost("id"), deletePost);
 router.put("/posts/:id", verifyToken, multer.single("image"), findPost("id"), updatePost);
 router.get("/posts", getPosts);
-router.get("/posts/:id", getPost);
+router.get("/posts/:id", verifyToken, getPost);
 router.get("/posts-user", verifyToken, getPostsUser);
 
 export default router;

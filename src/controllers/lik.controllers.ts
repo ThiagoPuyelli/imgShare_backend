@@ -63,3 +63,18 @@ export var getLikesToPost = async (req, res) => {
         });
     }
 }
+
+export var verifyLik = async (req, res) => {
+    const post: Post = await getRepository(Post).findOne({id: req.params.id});
+    const user: User = await getRepository(User).findOne({id: req.headers["x-access-token"].split("|")[1]});
+    const verifyPostLike: Lik = await getRepository(Lik).findOne({user, post});
+    if(verifyPostLike){
+        res.json({
+            lik: true
+        })
+    } else {
+        res.json({
+            lik: false
+        })
+    }
+}

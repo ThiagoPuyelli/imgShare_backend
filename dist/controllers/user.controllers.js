@@ -20,6 +20,7 @@ const comparePassword_1 = __importDefault(require("../methods/comparePassword"))
 const encryptPassword_1 = __importDefault(require("../methods/encryptPassword"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const cloudinary_1 = require("cloudinary");
 var register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = new User_entity_1.User();
     for (let i in req.body) {
@@ -31,26 +32,52 @@ var register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
     }
     if (req.file) {
-        user.image = req.file.filename;
+        cloudinary_1.v2.uploader.upload(path_1.default.join(__dirname, "../uploads/" + req.file.filename), (err, image) => __awaiter(void 0, void 0, void 0, function* () {
+            if (err)
+                res.json({ error: "Error al guardar imagen" });
+            const { url, public_id } = image;
+            if (url && public_id) {
+                user.image = url;
+                user.public_id = public_id;
+            }
+            fs_1.default.unlinkSync(path_1.default.join(__dirname, "../uploads/" + req.file.filename));
+            if (user) {
+                const userSave = yield typeorm_1.getRepository(User_entity_1.User).save(user);
+                if (userSave) {
+                    const token = yield jsonwebtoken_1.default.sign({ id: userSave.id }, process.env.JWT_PASSWORD, {
+                        expiresIn: 60 * 60 * 24
+                    });
+                    res.json({ token: token + "|" + userSave.id });
+                }
+                else {
+                    res.json({
+                        error: "Ocurrió un error al almacenar el usuario"
+                    });
+                }
+            }
+        }));
     }
-    if (user) {
-        const userSave = yield typeorm_1.getRepository(User_entity_1.User).save(user);
-        if (userSave) {
-            const token = yield jsonwebtoken_1.default.sign({ id: userSave.id }, process.env.JWT_PASSWORD, {
-                expiresIn: 60 * 60 * 24
-            });
-            res.json({ token: token + "|" + userSave.id });
-        }
-        else {
-            res.json({
-                error: "Ocurrió un error al almacenar el usuario"
-            });
+    else {
+        if (user) {
+            const userSave = yield typeorm_1.getRepository(User_entity_1.User).save(user);
+            if (userSave) {
+                const token = yield jsonwebtoken_1.default.sign({ id: userSave.id }, process.env.JWT_PASSWORD, {
+                    expiresIn: 60 * 60 * 24
+                });
+                res.json({ token: token + "|" + userSave.id });
+            }
+            else {
+                res.json({
+                    error: "Ocurrió un error al almacenar el usuario"
+                });
+            }
         }
     }
 });
 exports.register = register;
 var login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
+    console.log(req.body);
     if (email && password) {
         const user = yield typeorm_1.getRepository(User_entity_1.User).findOne({ email });
         if (user) {
@@ -87,8 +114,23 @@ var update = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             user[i] = req.body[i];
         }
         if (req.file) {
-            fs_1.default.unlinkSync(path_1.default.join(__dirname, "../uploads/" + user.image));
-            user.image = req.file.filename;
+            cloudinary_1.v2.uploader.destroy(user.public_id, (err, deleteImage) => {
+                if (err)
+                    res.json({ error: "Error al guardar imagen" });
+                if (deleteImage) {
+                    fs_1.default.unlinkSync(path_1.default.join(__dirname, "../uploads/" + user.image));
+                    cloudinary_1.v2.uploader.upload(path_1.default.join(__dirname, "../uploads/" + req.file.filename), (err, image) => {
+                        if (err)
+                            res.json({ error: "Error al guardar imagen" });
+                        const { url, public_id } = image;
+                        if (url && public_id) {
+                            user.image = url;
+                            user.public_id = public_id;
+                        }
+                        fs_1.default.unlinkSync(path_1.default.join(__dirname, "../uploads/" + req.file.filename));
+                    });
+                }
+            });
         }
         if (user) {
             const userUpdate = yield typeorm_1.getRepository(User_entity_1.User).update({ id: user.id }, user);

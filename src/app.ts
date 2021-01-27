@@ -3,7 +3,7 @@ import express from "express";
 import userRoutes from "./routes/user.routes";
 import postRoutes from "./routes/post.routes";
 import likRoutes from "./routes/lik.routes";
-import cors from "cors";
+import configCloudinary from "./middlewares/cloudinary";
 
 var config = (app) => {
 
@@ -12,6 +12,7 @@ var config = (app) => {
     
     // Middlewares
     app.use(morgan("dev"));
+    configCloudinary;
     app.use(express.urlencoded({extended: false}));
     app.use(express.json());
 
@@ -23,7 +24,6 @@ var config = (app) => {
         res.header('Allow', 'GET, POST, OPTIONS, PUT, DELETE');
         next();
     });
-    app.use(cors("http:localhost:6000"));
     
 
     // Routes

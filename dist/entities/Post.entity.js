@@ -20,10 +20,18 @@ __decorate([
 ], Post.prototype, "id", void 0);
 __decorate([
     typeorm_1.Column({
-        type: "text"
+        type: "varchar",
+        unique: true
     }),
     __metadata("design:type", String)
 ], Post.prototype, "image", void 0);
+__decorate([
+    typeorm_1.Column({
+        type: "varchar",
+        unique: true
+    }),
+    __metadata("design:type", String)
+], Post.prototype, "public_id", void 0);
 __decorate([
     typeorm_1.Column({
         default: 0

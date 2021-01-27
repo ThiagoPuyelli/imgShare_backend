@@ -13,6 +13,6 @@ router.post("/posts", verifyToken_1.default, multer_1.default.single("image"), p
 router.delete("/posts/:id", verifyToken_1.default, findPost_1.default("id"), post_controllers_1.deletePost);
 router.put("/posts/:id", verifyToken_1.default, multer_1.default.single("image"), findPost_1.default("id"), post_controllers_1.updatePost);
 router.get("/posts", post_controllers_1.getPosts);
-router.get("/posts/:id", post_controllers_1.getPost);
+router.get("/posts/:id", verifyToken_1.default, post_controllers_1.getPost);
 router.get("/posts-user", verifyToken_1.default, post_controllers_1.getPostsUser);
 exports.default = router;

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLikesToPost = exports.setLik = void 0;
+exports.verifyLik = exports.getLikesToPost = exports.setLik = void 0;
 const Lik_entity_1 = require("../entities/Lik.entity");
 const Post_entity_1 = require("../entities/Post.entity");
 const User_entity_1 = require("../entities/User.entity");
@@ -79,3 +79,19 @@ var getLikesToPost = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.getLikesToPost = getLikesToPost;
+var verifyLik = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const post = yield typeorm_1.getRepository(Post_entity_1.Post).findOne({ id: req.params.id });
+    const user = yield typeorm_1.getRepository(User_entity_1.User).findOne({ id: req.headers["x-access-token"].split("|")[1] });
+    const verifyPostLike = yield typeorm_1.getRepository(Lik_entity_1.Lik).findOne({ user, post });
+    if (verifyPostLike) {
+        res.json({
+            lik: true
+        });
+    }
+    else {
+        res.json({
+            lik: false
+        });
+    }
+});
+exports.verifyLik = verifyLik;

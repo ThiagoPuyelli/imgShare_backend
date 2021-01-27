@@ -5,6 +5,7 @@ import comparePassword from "../methods/comparePassword"
 import encryptPassword from "../methods/encryptPassword";
 import fs from "fs";
 import path from "path";
+import { v2 } from "cloudinary";
 
 export var register = async (req, res) => {
     const user: User = new User();
@@ -16,28 +17,61 @@ export var register = async (req, res) => {
         }
     }
     if(req.file){
-        user.image = req.file.filename;
-    }
+        v2.uploader.upload(path.join(__dirname, "../uploads/" + req.file.filename), async (err, image) => {
+            if(err) res.json({error: "Error al guardar imagen"});
 
-    if(user){
-        const userSave = await getRepository(User).save(user);
+            const { url, public_id } = image
 
-        if(userSave){
-            const token = await jwt.sign({id: userSave.id}, process.env.JWT_PASSWORD, {
-                expiresIn: 60 * 60 * 24
-            });
-            res.json({token: token + "|" + userSave.id});
-        } else {
-            res.json({
-                error: "Ocurrió un error al almacenar el usuario"
-            });
+            if(url && public_id){
+                user.image = url;
+                user.public_id = public_id;
+            }
+
+            fs.unlinkSync(path.join(__dirname, "../uploads/" + req.file.filename));
+
+            if(user){
+                const userSave = await getRepository(User).save(user);
+        
+                if(userSave){
+        
+                    const token = await jwt.sign({id: userSave.id}, process.env.JWT_PASSWORD, {
+                        expiresIn: 60 * 60 * 24
+                    });
+        
+                    res.json({token: token + "|" + userSave.id});
+                } else {
+                    res.json({
+                        error: "Ocurrió un error al almacenar el usuario"
+                    });
+                }
+            }
+        })
+    } else {
+        if(user){
+            const userSave = await getRepository(User).save(user);
+    
+            if(userSave){
+    
+                const token = await jwt.sign({id: userSave.id}, process.env.JWT_PASSWORD, {
+                    expiresIn: 60 * 60 * 24
+                });
+    
+                res.json({token: token + "|" + userSave.id});
+            } else {
+                res.json({
+                    error: "Ocurrió un error al almacenar el usuario"
+                });
+            }
         }
     }
+
+    
 
 }
 
 export var login = async (req, res) => {
     const { email, password } = req.body;
+    console.log(req.body)
 
     if(email && password){
         const user: User = await getRepository(User).findOne({email});
@@ -76,8 +110,24 @@ export var update = async (req, res) => {
         }
 
         if(req.file){
-            fs.unlinkSync(path.join(__dirname, "../uploads/" + user.image));
-            user.image = req.file.filename;
+            v2.uploader.destroy(user.public_id, (err, deleteImage) => {
+                if(err) res.json({error: "Error al guardar imagen"});
+
+                if(deleteImage){
+                    fs.unlinkSync(path.join(__dirname, "../uploads/" + user.image));
+                    
+                    v2.uploader.upload(path.join(__dirname, "../uploads/" + req.file.filename), (err, image) => {
+                        if(err) res.json({error: "Error al guardar imagen"});
+                         
+                        const { url, public_id } = image;
+                        if(url && public_id){
+                            user.image = url;
+                            user.public_id = public_id;
+                        }
+                        fs.unlinkSync(path.join(__dirname, "../uploads/" + req.file.filename));
+                    })
+                }
+            })
         }
 
         if(user){

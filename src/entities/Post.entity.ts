@@ -8,9 +8,16 @@ export class Post {
     id: number;
 
     @Column({
-        type: "text"
+        type: "varchar",
+        unique: true
     })
     image: string;
+
+    @Column({
+        type: "varchar",
+        unique: true
+    })
+    public_id: string;
 
     @Column({
         default: 0

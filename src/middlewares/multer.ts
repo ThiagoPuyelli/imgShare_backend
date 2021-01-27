@@ -11,7 +11,7 @@ const generatedStorage = () => {
         async filename(req, file, cb){
             const { originalname } = file;
     
-            const originalnameSplit = originalname.split("|");
+            const originalnameSplit = originalname.split(".");
             const fileExt = originalnameSplit[originalnameSplit.length - 1];
     
             const filename = uuid.v4() + "." + fileExt;

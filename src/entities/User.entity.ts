@@ -20,12 +20,21 @@ export class User{
 
     @Column({
         type: "varchar",
-        nullable: true
+        nullable: true,
+        unique: true
     })
     image: string;
 
     @Column({
-        length: 9
+        type: "varchar",
+        nullable: true,
+        unique: true  
+    })
+    public_id: string;
+
+    @Column({
+        type: "varchar",
+        nullable: true
     })
     positionImage: string;
 
