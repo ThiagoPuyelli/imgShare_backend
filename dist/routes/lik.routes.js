@@ -10,4 +10,5 @@ const lik_controllers_1 = require("../controllers/lik.controllers");
 router.get("/lik/:id", verifyToken_1.default, lik_controllers_1.setLik);
 router.get("/lik/:id", verifyToken_1.default, lik_controllers_1.getLikesToPost);
 router.get("/lik-verify/:id", verifyToken_1.default, lik_controllers_1.verifyLik);
+router.delete("/lik/:id", verifyToken_1.default, lik_controllers_1.deleteLik);
 exports.default = router;

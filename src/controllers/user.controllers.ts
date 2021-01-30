@@ -144,3 +144,14 @@ export var update = async (req, res) => {
         });
     }
 }
+
+export var getUser = async (req, res) => {
+    const user: User = await getRepository(User).findOne({id: req.params.id});
+    if(user){
+        res.json(user);
+    } else {
+        res.json({
+            error: "Error o el usuarion no existe"
+        });
+    }
+}

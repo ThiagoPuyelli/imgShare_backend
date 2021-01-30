@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyLik = exports.getLikesToPost = exports.setLik = void 0;
+exports.deleteLik = exports.verifyLik = exports.getLikesToPost = exports.setLik = void 0;
 const Lik_entity_1 = require("../entities/Lik.entity");
 const Post_entity_1 = require("../entities/Post.entity");
 const User_entity_1 = require("../entities/User.entity");
@@ -24,30 +24,26 @@ var setLik = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
     }
     else {
-        if (post.user != user) {
-            const lik = new Lik_entity_1.Lik();
-            lik.post = post;
-            lik.user = user;
-            if (lik) {
-                const likSaved = yield typeorm_1.getRepository(Lik_entity_1.Lik).save(lik);
-                if (likSaved) {
+        const lik = new Lik_entity_1.Lik();
+        lik.post = post;
+        lik.user = user;
+        if (lik) {
+            const likSaved = yield typeorm_1.getRepository(Lik_entity_1.Lik).save(lik);
+            if (likSaved) {
+                const postUpdateLike = yield typeorm_1.getRepository(Post_entity_1.Post).update({ id: req.params.id }, { likes: post.likes + 1 });
+                if (postUpdateLike) {
                     res.json(likSaved);
-                }
-                else {
-                    res.json({
-                        error: "Ha ocurrido un fallo al guardar el lik"
-                    });
                 }
             }
             else {
                 res.json({
-                    error: "Los datos del lik no son válidos"
+                    error: "Ha ocurrido un fallo al guardar el lik"
                 });
             }
         }
         else {
             res.json({
-                error: "Eres dueño del Post"
+                error: "Los datos del lik no son válidos"
             });
         }
     }
@@ -95,3 +91,23 @@ var verifyLik = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.verifyLik = verifyLik;
+var deleteLik = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const post = yield typeorm_1.getRepository(Post_entity_1.Post).findOne({ id: req.params.id });
+    const user = yield typeorm_1.getRepository(User_entity_1.User).findOne({ id: req.headers["x-access-token"].split("|")[1] });
+    const deleteLik = yield typeorm_1.getRepository(Lik_entity_1.Lik).delete({ post, user });
+    if (deleteLik) {
+        post.likes = post.likes - 1;
+        const postUpdate = yield typeorm_1.getRepository(Post_entity_1.Post).update({ id: req.params.id }, post);
+        if (postUpdate) {
+            res.json({
+                deleteLik
+            });
+        }
+    }
+    else {
+        res.json({
+            error: "Error al borrar el like"
+        });
+    }
+});
+exports.deleteLik = deleteLik;

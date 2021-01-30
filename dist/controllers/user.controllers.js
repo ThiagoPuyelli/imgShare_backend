@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.update = exports.login = exports.register = void 0;
+exports.getUser = exports.update = exports.login = exports.register = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const User_entity_1 = require("../entities/User.entity");
 const typeorm_1 = require("typeorm");
@@ -149,3 +149,15 @@ var update = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.update = update;
+var getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield typeorm_1.getRepository(User_entity_1.User).findOne({ id: req.params.id });
+    if (user) {
+        res.json(user);
+    }
+    else {
+        res.json({
+            error: "Error o el usuarion no existe"
+        });
+    }
+});
+exports.getUser = getUser;

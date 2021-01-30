@@ -12,4 +12,5 @@ router.post("/users/register", multer_1.default.single("image"), user_controller
 router.post("/users/login", user_controllers_1.login);
 router.put("/users", verifyToken_1.default, multer_1.default.single("image"), user_controllers_1.update);
 router.get("/auth", verifyToken_1.default, (req, res) => res.json({ auth: true }));
+router.get("/users/:id", verifyToken_1.default, user_controllers_1.getUser);
 exports.default = router;

@@ -12,14 +12,16 @@ export var setLik = async (req, res) => {
             error: "Ha este post ya le diste lik"
         });
     } else {
-        if(post.user != user){
             const lik: Lik = new Lik();
             lik.post = post;
             lik.user = user;
             if(lik){
                 const likSaved = await getRepository(Lik).save(lik);
                 if(likSaved){
-                    res.json(likSaved);
+                    const postUpdateLike = await getRepository(Post).update({id: req.params.id}, {likes: post.likes + 1})
+                    if(postUpdateLike){
+                        res.json(likSaved);
+                    }
                 } else {
                     res.json({
                         error: "Ha ocurrido un fallo al guardar el lik"
@@ -30,11 +32,6 @@ export var setLik = async (req, res) => {
                     error: "Los datos del lik no son válidos"
                 });
             }
-        } else {
-            res.json({
-                error: "Eres dueño del Post"
-            });
-        }
     }
 }
 
@@ -75,6 +72,25 @@ export var verifyLik = async (req, res) => {
     } else {
         res.json({
             lik: false
+        })
+    }
+}
+
+export var deleteLik = async (req, res) => {
+    const post: Post = await getRepository(Post).findOne({id: req.params.id});
+    const user: User = await getRepository(User).findOne({id: req.headers["x-access-token"].split("|")[1]});
+    const deleteLik = await getRepository(Lik).delete({post, user});
+    if(deleteLik){
+        post.likes = post.likes - 1;
+        const postUpdate = await getRepository(Post).update({id: req.params.id}, post);
+        if(postUpdate){
+            res.json({
+                deleteLik
+            });
+        }
+    } else {
+        res.json({
+            error: "Error al borrar el like"
         })
     }
 }
