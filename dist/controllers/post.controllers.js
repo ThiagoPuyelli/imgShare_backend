@@ -117,7 +117,7 @@ var getPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.getPost = getPost;
 var getPostsUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const user = yield typeorm_1.getRepository(User_entity_1.User).findOne({ id: req.headers["x-access-token"].split("|")[1] });
+    const user = yield typeorm_1.getRepository(User_entity_1.User).findOne({ id: req.params.id });
     const posts = yield typeorm_1.getRepository(Post_entity_1.Post).find({ user });
     if (posts) {
         res.json(posts);

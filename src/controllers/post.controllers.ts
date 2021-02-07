@@ -110,7 +110,7 @@ export var getPost = async (req, res) => {
 }
 
 export var getPostsUser = async (req, res) => {
-    const user: User = await getRepository(User).findOne({id: req.headers["x-access-token"].split("|")[1]});
+    const user: User = await getRepository(User).findOne({id: req.params.id});
     const posts: Array<Post> = await getRepository(Post).find({user});
 
     if(posts){

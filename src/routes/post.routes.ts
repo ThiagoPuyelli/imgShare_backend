@@ -10,6 +10,6 @@ router.delete("/posts/:id", verifyToken, findPost("id"), deletePost);
 router.put("/posts/:id", verifyToken, multer.single("image"), findPost("id"), updatePost);
 router.get("/posts", getPosts);
 router.get("/posts/:id", verifyToken, getPost);
-router.get("/posts-user", verifyToken, getPostsUser);
+router.get("/posts-user/:id", verifyToken, getPostsUser);
 
 export default router;
